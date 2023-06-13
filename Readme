@@ -1,0 +1,49 @@
+RP2040-based RF sweep/alignment generator
+
+This uses a Raspberry Pi Pico (or other RP2040 board) to generate a configurable-frequency crystal-locked RF signal
+
+
+Prerequisistes:
+Python installed on host computer 
+MicroPython "mpremote" tool on host 
+Pi Pico with MicroPython 
+
+1) Install MicroPython on the Pico (see https://www.raspberrypi.com/documentation/microcontrollers/micropython.html)
+2) Ensure python 3 is installed in your host computer's command line (https://www.python.org/)
+3) Install the MicroPython "mpremote" tool (see https://docs.micropython.org/en/latest/reference/mpremote.html)
+Note: to run mpremote on my system I needed to type "python -m mpremote" instead of just "mpremote" after running pip
+
+
+Installing the code on the Pico:
+1) Copy the code file: mpremote cp classygen1.py :boot.py
+2) Reset the Pico: mpremote reset
+
+
+Hardware connections:
+GPIO pin 16 is RF signal out. This is pin 21 on the Pico (bottom right when viewed from above)
+GPIO pin 17 is a sync output when performing sweeps. This is pin 22 on the Pico (next to the previous pin)
+The third pin from either edge on either of the Pico's connector is a valid ground conection
+
+
+To use:
+1) Access REPL on Pi: either run "mpremote" without options or connect to the virtual COM port using PuTTY or another terminal emulator program.
+2) Output a fixed frequency (specify in kHz, in this case 4.5MHz):
+outputClock(4500)
+Some frequencies are not possible due to PLL limitations, these will result in errors.
+3) Specify a frequency sweep: here center frequency 24MHz, width 8MHz, step of 250kHz
+gen.freqList = freqRange(24000, 8000, 250)
+4) Start the sweep:
+gen.start()
+Every 1ms the frequency will update to the next in the list. When the first frequency is output the sync pin will output a high voltage
+If a frequency in the sweep cannot be output it will automatically be removed from the list.
+5) Verify the frequencies in use:
+gen.freqList
+6) Stop the frequency scan before outputting a single frequency:
+gen.stop()
+
+
+Known shortcomings:
+Frequencies above 100MHz will likely crash, consider making use of the square wave's harmonics if necessary
+Low frequencies are not available with the current code. I tihnk 313kHz is probably the limit
+The output is temporarialy disabled when stepping between frequencies.
+The raw output neither impedance matched nor attenuated. An external circuit may help here.
